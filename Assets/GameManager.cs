@@ -3,28 +3,37 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class GameManager : MonoBehaviour{
 
     public float minDist;
-    public Image[] itemImages;
+    public GameObject transition;
+    public GameObject winPanel;
+    public GameObject pausePanel;
+    public GameObject errorPanel;
     public GameObject itemParent;
     public GameObject targetParent;
+    public LevelLoader loader;
 
     public GameObject itemPrefab;
     public GameObject targetPrefab;
 
+    public Image[] itemImages;
     public GameObject[] items;
     public GameObject[] targets;
     public List<string> answers = new List<string>();
-    string folderPath;
-    string[] filePaths;
 
     public bool[] score;
+    private string foldername;
 
-    void Start(){
-        DirectoryInfo streamingAssets = new DirectoryInfo(Application.streamingAssetsPath);
+    void Start() {
+        winPanel.SetActive(false);
+        pausePanel.SetActive(false);
+        errorPanel.SetActive(false);
+        foldername = PlayerPrefs.GetString("FolderName");
+        DirectoryInfo streamingAssets = new DirectoryInfo(Application.streamingAssetsPath + "/" + foldername);
         itemImages = new Image[DirCount(streamingAssets)];
 
         items = new GameObject[itemImages.Length];
@@ -32,30 +41,23 @@ public class GameManager : MonoBehaviour{
 
         ParseJawaban();
         SpawnImages();
-
-        //instantiate objects based on itemImages count;
-
-		//for (int i = 0; i < itemParent.transform.childCount; i++) {
-        //    items[i] = itemParent.transform.GetChild(i).gameObject;
-		//}
-		//for (int i = 0; i < targetParent.transform.childCount; i++) {
-        //    targets[i] = targetParent.transform.GetChild(i).gameObject;
-		//}
     }
 
     void ParseJawaban() {
-        var stream = new StreamReader(Application.streamingAssetsPath + "/jawaban.txt");
+        var stream = new StreamReader(Application.streamingAssetsPath + "/" + foldername + "/jawaban.txt");
 		while (!stream.EndOfStream) {
             answers.Add(stream.ReadLine());
 		}
     }
 
     public void CheckImages() {
+        int nilai = 0;
         score = null;
         score = new bool[items.Length];
 		for (int i = 0; i < targets.Length; i++) {
 			if (targets[i].GetComponent<TargetScript>().heldImage == null) {
                 Debug.LogError("Error, held image on " + targets[i].name + " is null");
+                StartCoroutine("ShowError");
                 //kamu belum memasukkan semua gambar!
                 return;
 			}
@@ -74,12 +76,17 @@ public class GameManager : MonoBehaviour{
 			if (score[i] == true) {
                 items[i].transform.GetComponent<ImageLoader>().correct.SetActive(true);
                 items[i].transform.GetComponent<ImageLoader>().wrong.SetActive(false);
+                nilai++;
             }
 			else {
                 items[i].transform.GetComponent<ImageLoader>().wrong.SetActive(true);
                 items[i].transform.GetComponent<ImageLoader>().correct.SetActive(false);
             }
+            items[i].transform.GetComponent<DragNDrop>().enabled = false;
 		}
+
+        winPanel.transform.GetChild(0).transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = nilai + "/" + score.Length;
+        winPanel.SetActive(true);
 	}
 
     void SpawnImages() {
@@ -88,12 +95,7 @@ public class GameManager : MonoBehaviour{
             itm.name = i.ToString();
             items[i] = itm;
 
-
-            folderPath = Application.streamingAssetsPath;
-            filePaths = Directory.GetFiles(folderPath, "*.jpg");
-
-            //byte[] pngBytes = File.ReadAllBytes(filePaths[itm.transform.GetSiblingIndex()]);
-            byte[] pngBytes = File.ReadAllBytes(Application.streamingAssetsPath + "/" + (itm.transform.GetSiblingIndex() + 1) + ".jpg");
+            byte[] pngBytes = File.ReadAllBytes(Application.streamingAssetsPath + "/" + foldername + "/" + (itm.transform.GetSiblingIndex() + 1) + ".jpg");
 
             Texture2D tex = new Texture2D(2, 2);
             tex.LoadImage(pngBytes);
@@ -104,7 +106,7 @@ public class GameManager : MonoBehaviour{
             itemImage.sprite = fromTex;
 
             GameObject targ = Instantiate(targetPrefab, targetParent.transform);
-            targ.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = answers[i];
+            targ.GetComponent<TargetScript>().targetText.text = answers[i];
             targ.name = i.ToString();
             targets[i] = targ;
         }
@@ -125,6 +127,27 @@ public class GameManager : MonoBehaviour{
         }
     }
 
+    public void Retry() {
+        Time.timeScale = 1f;
+        loader.ReloadLevel();
+    }
+
+    public void Menu() {
+        Time.timeScale = 1f;
+        transition.SetActive(true);
+        loader.LoadLevelSelect();
+	}
+
+    public void Pause() {
+        pausePanel.SetActive(true);
+        Time.timeScale = 0f;
+	}
+
+    public void Resume() {
+        Time.timeScale = 1f;
+        pausePanel.SetActive(false);
+    }
+
     public static long DirCount(DirectoryInfo d) {
         long i = 0;
         // Add file sizes.
@@ -136,6 +159,13 @@ public class GameManager : MonoBehaviour{
         return i;
     }
 
+    public IEnumerator ShowError() {
+        errorPanel.SetActive(true);
+
+        yield return new WaitForSeconds(3f);
+
+        errorPanel.SetActive(false);
+	}
     //void load images into items
 
     //void load answers into targets
