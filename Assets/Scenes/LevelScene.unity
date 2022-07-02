@@ -1423,7 +1423,7 @@ GameObject:
   - component: {fileID: 904221432}
   - component: {fileID: 904221431}
   m_Layer: 5
-  m_Name: nilai text
+  m_Name: error text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3349,6 +3349,7 @@ MonoBehaviour:
   errorPanel: {fileID: 1851306178}
   itemParent: {fileID: 1009971518}
   targetParent: {fileID: 705025992}
+  errorText: {fileID: 904221431}
   loader: {fileID: 1561960925}
   itemPrefab: {fileID: 7820751240021641195, guid: 2039e8adc1308574d9a68acf413608fd,
     type: 3}

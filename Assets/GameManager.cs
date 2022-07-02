@@ -15,6 +15,7 @@ public class GameManager : MonoBehaviour{
     public GameObject errorPanel;
     public GameObject itemParent;
     public GameObject targetParent;
+    public TextMeshProUGUI errorText;
     public LevelLoader loader;
 
     public GameObject itemPrefab;
@@ -27,6 +28,7 @@ public class GameManager : MonoBehaviour{
 
     public bool[] score;
     private string foldername;
+    private int itemLength;
 
     void Start() {
         winPanel.SetActive(false);
@@ -35,9 +37,11 @@ public class GameManager : MonoBehaviour{
         foldername = PlayerPrefs.GetString("FolderName");
         DirectoryInfo streamingAssets = new DirectoryInfo(Application.streamingAssetsPath + "/" + foldername);
         itemImages = new Image[DirCount(streamingAssets)];
+        itemLength = itemImages.Length;
+        itemLength = Mathf.Clamp(itemLength, 0, 10);
 
-        items = new GameObject[itemImages.Length];
-        targets = new GameObject[itemImages.Length];
+        items = new GameObject[itemLength];
+        targets = new GameObject[itemLength];
 
         ParseJawaban();
         SpawnImages();
@@ -48,6 +52,11 @@ public class GameManager : MonoBehaviour{
 		while (!stream.EndOfStream) {
             answers.Add(stream.ReadLine());
 		}
+        if(answers.Count != itemLength) {
+            errorText.text = "Jumlah jawaban dengan gambar tidak sama! Perbaiki terlebih dahulu";
+            StartCoroutine("ShowError");
+            return;
+        }
     }
 
     public void CheckImages() {
@@ -57,6 +66,7 @@ public class GameManager : MonoBehaviour{
 		for (int i = 0; i < targets.Length; i++) {
 			if (targets[i].GetComponent<TargetScript>().heldImage == null) {
                 Debug.LogError("Error, held image on " + targets[i].name + " is null");
+                errorText.text = "Kamu belum memasukkan semua gambar!";
                 StartCoroutine("ShowError");
                 //kamu belum memasukkan semua gambar!
                 return;
@@ -90,7 +100,7 @@ public class GameManager : MonoBehaviour{
 	}
 
     void SpawnImages() {
-		for (int i = 0; i < itemImages.Length; i++) {
+		for (int i = 0; i < itemLength; i++) {
             GameObject itm = Instantiate(itemPrefab, itemParent.transform);
             itm.name = i.ToString();
             items[i] = itm;
