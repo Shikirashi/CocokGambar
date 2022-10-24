@@ -14,12 +14,14 @@ public class TargetScript : MonoBehaviour{
     void Start(){
         hasImage = false;
         heldImage = null;
+        GetComponent<Image>().enabled = true;
     }
 
 	private void OnTriggerExit2D(Collider2D collision) {
 		if (collision.tag == "Image") {
             hasImage = false;
             heldImage = null;
-		}
+            GetComponent<Image>().enabled = true;
+        }
 	}
 }

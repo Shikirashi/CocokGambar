@@ -1,6 +1,7 @@
  using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class DragNDrop : MonoBehaviour{
 
@@ -33,11 +34,7 @@ public class DragNDrop : MonoBehaviour{
                 transform.position = target.transform.position;
                 target.GetComponent<TargetScript>().hasImage = true;
                 target.GetComponent<TargetScript>().heldImage = this.gameObject;
-                //Debug.Log("Dropped");
-            }
-            else {
-                //item[index].transform.localPosition = itemPos[index];
-                //Debug.Log("Not close enough, distance is: " + dist);
+                target.GetComponent<Image>().enabled = false;
             }
         }
     }
